@@ -188,7 +188,14 @@ body.theme-indigo {
 // Firebase config
 // ============================================================
 const FIREBASE_URL = 'https://ganbari-stanp-default-rtdb.asia-southeast1.firebasedatabase.app';
-const DB_PATH = '/study-tracker-v1';
+const FIREBASE_BASE = '/study-tracker';
+let DB_PATH = '/study-tracker-v1'; // overwritten after kids are known
+
+function buildDbPath(kids) {
+  if (!kids || !kids.length) return '/study-tracker-v1';
+  const key = kids.map(k => k.name).join('');
+  return `${FIREBASE_BASE}-${key}`;
+}
 
 async function dbGet(path) {
   const res = await fetch(FIREBASE_URL + DB_PATH + path + '.json');
@@ -357,18 +364,39 @@ const SETTLE_PW = '0999';
 let saveTimer = null;
 async function loadFromFirebase() {
   try {
-    const data = await dbGet('');
-    if (data && data.kids) {
-      state.kids = data.kids || [];
-      state.records = data.records || {};
-      state.settlements = data.settlements || {};
+    // Step 1: try to find kids from a temporary probe path.
+    // We store a "directory" of known paths at /study-tracker-index.json
+    // so we can look up the right path before loading data.
+    // Simpler approach: try the URL param to guess the kid name first,
+    // then fall back to scanning for a matching path.
+    // Actually simplest: store the path key in localStorage as a local hint.
+    const localKey = localStorage.getItem('study-tracker-path-key');
+    if (localKey) {
+      DB_PATH = `${FIREBASE_BASE}-${localKey}`;
+      const data = await dbGet('');
+      if (data && data.kids) {
+        state.kids = data.kids;
+        state.records = data.records || {};
+        state.settlements = data.settlements || {};
+        return;
+      }
     }
+    // No local hint — treat as first time
   } catch(e) {
     // first time or network error — start fresh
   }
 }
 
+function updateDbPath() {
+  if (state.kids.length) {
+    const key = state.kids.map(k => k.name).join('');
+    DB_PATH = `${FIREBASE_BASE}-${key}`;
+    localStorage.setItem('study-tracker-path-key', key);
+  }
+}
+
 function scheduleSave() {
+  updateDbPath(); // ensure DB_PATH is correct based on current kids
   if (saveTimer) clearTimeout(saveTimer);
   state.saving = true;
   render();
