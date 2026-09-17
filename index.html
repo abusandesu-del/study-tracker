@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>がんばり スタンプカード</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --paper: #FBF6EC;
+  --paper-soft: #F3EEE2;
+  --ink: #4A4039;
+  --red: #E85D3D;
+  --indigo: #2C5F7C;
+  --gold: #D4A647;
+  --white: #fff;
+  --muted: #8a8378;
+  --border: #E0D8C5;
+}
+body {
+  background: var(--paper);
+  background-image: radial-gradient(circle at 1px 1px, rgba(74,64,57,0.06) 1px, transparent 0);
+  background-size: 18px 18px;
+  color: var(--ink);
+  font-family: 'Hiragino Maru Gothic ProN', 'Yu Gothic', 'Helvetica Neue', sans-serif;
+  min-height: 100vh;
+}
+body.theme-indigo {
+  --paper: #EEF4F7;
+  --paper-soft: #E0EBF0;
+  background-color: var(--paper);
+  background-image: radial-gradient(circle at 1px 1px, rgba(44,95,124,0.08) 1px, transparent 0);
+  background-size: 18px 18px;
+}
+.page { padding: 16px 14px 40px; max-width: 480px; margin: 0 auto; }
+
+/* Loading */
+#loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; gap: 12px; }
+#loading .icon { font-size: 40px; }
+#loading .text { color: var(--muted); font-size: 14px; }
+
+/* Header */
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.header-title { display: flex; align-items: center; gap: 8px; }
+.header-title h1 { font-size: 20px; font-weight: 800; letter-spacing: .02em; }
+.saving-tag { font-size: 11px; color: var(--muted); }
+
+/* Kid tabs */
+.kid-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.kid-tab { flex: 1; padding: 10px 0; border-radius: 12px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 4px; }
+
+/* Summary */
+.summary-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.summary-card { flex: 1; background: var(--white); border-radius: 14px; padding: 12px 8px; border-top: 4px solid; box-shadow: 0 2px 8px rgba(74,64,57,.08); display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.summary-icon { font-size: 18px; }
+.summary-label { font-size: 10px; color: var(--muted); }
+.summary-value { font-size: 14px; font-weight: 800; }
+
+/* Settlement card */
+.settle-card { background: var(--white); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(74,64,57,.08); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.settle-left .label { font-size: 12px; color: var(--muted); }
+.settle-left .yen { font-size: 20px; font-weight: 800; color: var(--red); }
+.settle-left .last { font-size: 11px; color: #9c948a; }
+.settle-btn { padding: 10px 16px; border-radius: 12px; border: none; background: var(--indigo); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.settle-btn:disabled { background: #D8CFB9; }
+
+/* Monthly bonus */
+.monthly-card { background: var(--white); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(74,64,57,.08); }
+.monthly-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.monthly-title { font-size: 13px; font-weight: 700; }
+.monthly-badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(212,166,71,.13); color: #9c7a23; font-weight: 700; }
+.bar-track { height: 8px; border-radius: 999px; background: #EFE9DB; overflow: hidden; margin-bottom: 8px; }
+.bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--red)); border-radius: 999px; transition: width .4s; }
+.monthly-footer { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.monthly-yen { font-weight: 800; color: var(--gold); font-size: 15px; }
+
+/* Calendar */
+.cal-card { background: var(--white); border-radius: 18px; padding: 14px; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(74,64,57,.10); }
+.month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.nav-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: #F3EEE2; font-size: 18px; cursor: pointer; }
+.month-label { font-size: 16px; font-weight: 800; }
+.weekday-row { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 4px; }
+.weekday-cell { text-align: center; font-size: 11px; font-weight: 700; padding: 4px 0; color: var(--muted); }
+.weekday-cell.sun { color: #C0504D; }
+.weekday-cell.sat { color: var(--indigo); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.day-cell { aspect-ratio: 1; border: none; border-radius: 10px; background: #F8F4EA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; padding: 2px; cursor: pointer; font-family: inherit; }
+.day-cell.today { background: #FDEFE5; box-shadow: inset 0 0 0 2px rgba(232,93,61,.33); }
+.day-cell.future { opacity: .45; cursor: default; }
+.day-cell.settled { cursor: default; background: #DCD5C6; box-shadow: none; }
+.day-cell.past-locked { opacity: .6; }
+.day-num { font-size: 11px; color: var(--muted); font-weight: 600; }
+.lock-icon { position: absolute; top: 1px; right: 2px; font-size: 8px; opacity: .5; }
+.fire-icon { position: absolute; top: 1px; left: 2px; font-size: 8px; }
+.stamps-wrap { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; }
+.stamp-badge { min-width: 15px; height: 15px; border-radius: 999px; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 3px; transition: transform .25s cubic-bezier(.34,1.56,.64,1); line-height: 1; }
+.cal-legend { font-size: 10px; color: #9c948a; text-align: center; margin-top: 8px; }
+.legend-kid { font-weight: 700; margin-right: 4px; }
+
+/* Legend */
+.legend-card { background: var(--white); border-radius: 14px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(74,64,57,.08); margin-bottom: 12px; }
+.legend-title { font-size: 13px; font-weight: 800; margin-bottom: 8px; color: var(--indigo); }
+.legend-list { padding-left: 18px; font-size: 12px; color: #6b625a; line-height: 1.7; }
+
+/* Bottom buttons */
+.reset-link { width: 100%; padding: 12px; border: none; background: transparent; color: #9c948a; font-size: 11px; font-weight: 600; text-decoration: underline; cursor: pointer; font-family: inherit; margin-top: 4px; }
+.export-btn { width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--white); color: var(--indigo); font-size: 13px; font-weight: 700; border-radius: 12px; cursor: pointer; font-family: inherit; margin-bottom: 20px; }
+
+/* Modal overlay */
+.overlay { position: fixed; inset: 0; background: rgba(40,32,24,.45); display: flex; align-items: flex-start; justify-content: center; z-index: 1000; }
+.overlay.center { align-items: center; padding: 20px; }
+.modal-card { background: var(--paper); border-radius: 0 0 24px 24px; width: 100%; max-width: 480px; max-height: 90vh; box-shadow: 0 8px 30px rgba(0,0,0,.2); display: flex; flex-direction: column; overflow: hidden; }
+.modal-scroll { overflow-y: auto; padding: 18px 18px 24px; flex: 1 1 auto; }
+.modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.modal-kid-name { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+.modal-date { font-size: 16px; font-weight: 800; }
+.close-btn { border: none; background: transparent; font-size: 18px; color: var(--muted); cursor: pointer; }
+.stamp-preview { background: var(--white); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(74,64,57,.08); }
+.preview-emoji { font-size: 20px; }
+.preview-text { font-size: 13px; font-weight: 700; color: var(--red); }
+.locked-banner { background: #EFEAE0; color: var(--muted); font-size: 12px; font-weight: 700; border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; text-align: center; }
+.activity-section { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.activity-section.locked { opacity: .5; pointer-events: none; }
+.sub-block { background: var(--paper-soft); border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.toggle-btn { display: flex; align-items: center; gap: 10px; background: var(--white); border: 1px solid #EAE3D3; border-radius: 12px; padding: 10px 12px; text-align: left; width: 100%; cursor: pointer; font-family: inherit; }
+.toggle-btn.active { background: #FDEFE5; border-color: rgba(232,93,61,.33); }
+.toggle-btn.compact { padding: 8px 10px; }
+.checkbox { width: 22px; height: 22px; border-radius: 7px; border: 2px solid #D8CFB9; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #fff; }
+.checkbox.checked { background: var(--red); border-color: var(--red); }
+.toggle-title { font-size: 13px; font-weight: 700; color: var(--ink); display: block; }
+.toggle-desc { font-size: 11px; color: #9c948a; display: block; }
+.hour-picker { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 4px; }
+.hour-btn { flex: 1 0 auto; min-width: 38px; padding: 8px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--white); font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; font-family: inherit; }
+.hour-btn.active { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+.save-btn { width: 100%; padding: 14px; border-radius: 14px; border: none; background: var(--red); color: #fff; font-weight: 800; font-size: 15px; box-shadow: 0 4px 12px rgba(232,93,61,.35); cursor: pointer; font-family: inherit; }
+.delete-link { width: 100%; padding: 10px; border: none; background: transparent; color: #B0473A; font-size: 12px; font-weight: 700; margin-top: 10px; text-decoration: underline; cursor: pointer; font-family: inherit; }
+.delete-box { background: #FCE8E4; border-radius: 14px; padding: 14px; margin-top: 10px; border: 1px solid rgba(232,93,61,.2); }
+.delete-box-title { font-size: 13px; font-weight: 800; color: #A1432F; margin-bottom: 10px; }
+
+/* Confirm modal */
+.confirm-card { background: var(--white); border-radius: 18px; padding: 20px; width: 100%; max-width: 360px; box-shadow: 0 8px 30px rgba(0,0,0,.2); }
+.confirm-title { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+.confirm-body { font-size: 13px; color: #6b625a; line-height: 1.6; margin-bottom: 14px; }
+.pw-label { font-size: 11px; color: #9c948a; margin-bottom: 6px; }
+.pw-input { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 18px; letter-spacing: .3em; text-align: center; background: #FBF6EC; color: var(--ink); margin-bottom: 14px; font-family: inherit; }
+.pw-input.wrong { border-color: var(--red); animation: shake .4s; }
+.btn-row { display: flex; gap: 10px; }
+.cancel-btn { flex: 1; padding: 12px 0; border-radius: 12px; border: 1px solid var(--border); background: var(--white); color: var(--muted); font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
+.ok-btn { flex: 1; padding: 12px 0; border-radius: 12px; border: none; background: var(--red); color: #fff; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; }
+.ok-btn:disabled { background: #D8CFB9; }
+.del-ok-btn { flex: 1; padding: 12px 0; border-radius: 12px; border: none; background: #B0473A; color: #fff; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; }
+
+/* Export/Import */
+.export-tab-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.export-tab { flex: 1; padding: 9px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--white); font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; font-family: inherit; }
+.export-tab.active { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+.export-desc { font-size: 12px; color: #6b625a; line-height: 1.6; margin-bottom: 10px; }
+.export-textarea { width: 100%; height: 140px; border: 1px solid var(--border); border-radius: 10px; padding: 10px; font-size: 11px; background: #FBF6EC; color: var(--ink); font-family: monospace; resize: none; margin-bottom: 10px; }
+.copy-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--indigo); color: #fff; font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit; }
+.import-error { font-size: 12px; color: #A1432F; background: #FCE8E4; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+.close-link { width: 100%; padding: 12px; border: none; background: transparent; color: #9c948a; font-size: 12px; text-decoration: underline; cursor: pointer; font-family: inherit; margin-top: 4px; }
+
+/* Error banner */
+.error-banner { background: #FCE8E4; color: #A1432F; padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; border: 1px solid rgba(232,93,61,.2); }
+
+/* Setup */
+.setup-card { background: var(--white); border-radius: 18px; padding: 24px 20px; max-width: 420px; margin: 40px auto; box-shadow: 0 4px 14px rgba(74,64,57,.10); display: flex; flex-direction: column; gap: 12px; }
+.setup-input { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 14px; background: var(--paper); color: var(--ink); font-family: inherit; width: 100%; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-6px); }
+  40%,80% { transform: translateX(6px); }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="loading">
+    <div class="icon">📋</div>
+    <div class="text">読み込み中…</div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// Firebase config
+// ============================================================
+const FIREBASE_URL = 'https://ganbari-stanp-default-rtdb.asia-southeast1.firebasedatabase.app';
+const DB_PATH = '/study-tracker-v1';
+
+async function dbGet(path) {
+  const res = await fetch(FIREBASE_URL + DB_PATH + path + '.json');
+  if (!res.ok) throw new Error('fetch failed');
+  return res.json();
+}
+async function dbSet(path, data) {
+  const res = await fetch(FIREBASE_URL + DB_PATH + path + '.json', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('write failed');
+  return res.json();
+}
+
+// ============================================================
+// Date helpers
+// ============================================================
+const pad = (n) => String(n).padStart(2, '0');
+const fmt = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+const todayObj = new Date();
+const TODAY_KEY = fmt(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
+const MONTH_NAMES = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const WEEKDAYS_MON = ['月','火','水','木','金','土','日'];
+const WEEKDAYS_ALL = ['日','月','火','水','木','金','土'];
+
+function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+
+function getKidParam() {
+  try {
+    const p = new URLSearchParams(window.location.search).get('kid');
+    if (p) return p;
+    const h = window.location.hash || '';
+    const m = h.match(/kid=([^&]+)/);
+    if (m) return decodeURIComponent(m[1]);
+  } catch(e) {}
+  return null;
+}
+
+// ============================================================
+// Stamp calculations
+// ============================================================
+function calcStamps(a) {
+  if (!a) return 0;
+  let s = 0;
+  if (a.drillDramaHomework) s += 1;
+  if (a.commonStudy) {
+    const h = a.commonHours || 1.5;
+    s += Math.round(h / 1.5) + (a.commonDrama ? 1 : 0);
+  }
+  if (a.jukuStudy && a.jukuHours > 0) {
+    s += a.jukuHours + (a.jukuDrama ? 1 : 0);
+  }
+  return s;
+}
+
+function emptyActivity() {
+  return { drillDramaHomework:false, commonStudy:false, commonHours:0, commonDrama:false, jukuStudy:false, jukuHours:0, jukuDrama:false };
+}
+
+function calcWeeklyBonusDays(kidRecords) {
+  const keys = Object.keys(kidRecords||{}).sort();
+  if (!keys.length) return new Set();
+  const start = new Date(keys[0]);
+  const end = new Date(TODAY_KEY);
+  let streak = 0, buf = [];
+  const days = new Set();
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+    const k = fmt(d.getFullYear(), d.getMonth(), d.getDate());
+    if (calcStamps(kidRecords[k]) > 0) {
+      buf.push(k); streak++;
+      if (streak === 7) { buf.forEach(x => days.add(x)); buf = []; streak = 0; }
+    } else { buf = []; streak = 0; }
+  }
+  return days;
+}
+
+function calcMonthlyBonus(kidRecords, y, m) {
+  const total = daysInMonth(y, m);
+  const now = new Date();
+  const isCurrent = now.getFullYear()===y && now.getMonth()===m;
+  const last = isCurrent ? now.getDate() : total;
+  let rest = 0;
+  for (let d = 1; d <= last; d++) if (!calcStamps(kidRecords[fmt(y,m,d)])) rest++;
+  const bonus = rest===0?300: rest===1?200: rest===2?100:0;
+  return { restDays:rest, bonus, isComplete:!isCurrent, daysElapsed:last, totalDays:total };
+}
+
+function calcUnsettledYen(kidRecords, lastSettled) {
+  const keys = Object.keys(kidRecords||{}).sort();
+  if (!keys.length) return 0;
+  const start = new Date(keys[0]);
+  const end = new Date(TODAY_KEY);
+  let streak = 0, total = 0;
+  const after = k => !lastSettled || k > lastSettled;
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+    const k = fmt(d.getFullYear(), d.getMonth(), d.getDate());
+    const s = calcStamps(kidRecords[k]);
+    if (s > 0) {
+      streak++;
+      if (after(k)) total += s * 50;
+      if (streak === 7) { if (after(k)) total += 50; streak = 0; }
+    } else streak = 0;
+  }
+  // Monthly bonus: completed months only
+  const todayObj2 = new Date(TODAY_KEY);
+  const sm = new Date(start.getFullYear(), start.getMonth(), 1);
+  for (let m = new Date(sm); m <= todayObj2; m.setMonth(m.getMonth()+1)) {
+    const y = m.getFullYear(), mo = m.getMonth();
+    if (y === todayObj2.getFullYear() && mo === todayObj2.getMonth()) continue;
+    const t = daysInMonth(y, mo);
+    const me = fmt(y, mo, t);
+    if (!after(me)) continue;
+    let rest = 0;
+    for (let d = 1; d <= t; d++) if (!calcStamps(kidRecords[fmt(y,mo,d)])) rest++;
+    const b = rest===0?300: rest===1?200: rest===2?100:0;
+    total += b;
+  }
+  return total;
+}
+
+// ============================================================
+// App state
+// ============================================================
+const KID_COLORS = [
+  { main:'#E85D3D', soft:'#FDEFE5', page:'#FBF6EC', pageSoft:'#F3EEE2' },
+  { main:'#2C5F7C', soft:'#E6EEF2', page:'#EEF4F7', pageSoft:'#E0EBF0' },
+];
+
+let state = {
+  loading: true,
+  saving: false,
+  error: null,
+  kids: [],
+  records: {},
+  settlements: {},
+  activeKidId: null,
+  viewYear: todayObj.getFullYear(),
+  viewMonth: todayObj.getMonth(),
+  selectedDate: null,
+  showSettleConfirm: false,
+  showResetConfirm: false,
+  showExportImport: false,
+  exportMode: 'export',
+  importText: '',
+  importError: '',
+  copied: false,
+  showDeleteConfirm: false,
+  deletePw: '',
+  deleteWrongShake: false,
+  settlePw: '',
+  settleWrongShake: false,
+  resetPw: '',
+  resetWrongShake: false,
+  pastUnlockDate: null,
+  pendingPastDate: null,
+  pastUnlockPw: '',
+  pastUnlockWrongShake: false,
+};
+const SETTLE_PW = '0999';
+
+// ============================================================
+// Firebase persistence
+// ============================================================
+let saveTimer = null;
+async function loadFromFirebase() {
+  try {
+    const data = await dbGet('');
+    if (data && data.kids) {
+      state.kids = data.kids || [];
+      state.records = data.records || {};
+      state.settlements = data.settlements || {};
+    }
+  } catch(e) {
+    // first time or network error — start fresh
+  }
+}
+
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  state.saving = true;
+  render();
+  saveTimer = setTimeout(async () => {
+    try {
+      await dbSet('', { kids: state.kids, records: state.records, settlements: state.settlements });
+    } catch(e) {
+      state.error = '保存に失敗しました。ネットワークを確認してください。';
+    }
+    state.saving = false;
+    render();
+  }, 800);
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+function activeKid() { return state.kids.find(k => k.id === state.activeKidId) || state.kids[0]; }
+function activeKidIdx() { return state.kids.findIndex(k => k.id === activeKid()?.id); }
+function kidColor(i) { return KID_COLORS[i % KID_COLORS.length]; }
+function activeColor() { return kidColor(activeKidIdx()); }
+function activeRecords() { return state.records[activeKid()?.id] || {}; }
+function activeSettlement() { return state.settlements[activeKid()?.id] || { lastSettledDate:null, history:[] }; }
+function isPastUnlocked() { return state.pastUnlockDate === TODAY_KEY; }
+
+function calcWeeklyCountForMonth(kidRecords, y, m) {
+  const total = daysInMonth(y, m);
+  const todayObj2 = new Date(TODAY_KEY);
+  const isCurrent = todayObj2.getFullYear()===y && todayObj2.getMonth()===m;
+  const lastDay = isCurrent ? todayObj2.getDate() : total;
+  const monthStart = new Date(y, m, 1);
+  const keys = Object.keys(kidRecords||{}).sort();
+  let streak = 0;
+  if (keys.length) {
+    for (let d = new Date(keys[0]); d < monthStart; d.setDate(d.getDate()+1)) {
+      const k = fmt(d.getFullYear(), d.getMonth(), d.getDate());
+      const s = calcStamps(kidRecords[k]);
+      if (s > 0) { streak++; if (streak===7) streak=0; } else streak=0;
+    }
+  }
+  let count = 0;
+  for (let d = 1; d <= lastDay; d++) {
+    const k = fmt(y, m, d);
+    const s = calcStamps(kidRecords[k]);
+    if (s > 0) { streak++; if (streak===7) { count++; streak=0; } } else streak=0;
+  }
+  return count;
+}
+
+// ============================================================
+// Render
+// ============================================================
+function render() {
+  const app = document.getElementById('app');
+  if (state.loading) {
+    app.innerHTML = `<div id="loading"><div class="icon">📋</div><div class="text">読み込み中…</div></div>`;
+    return;
+  }
+
+  const color = activeColor();
+  document.body.className = activeKidIdx() === 1 ? 'theme-indigo' : '';
+
+  if (!state.kids.length) {
+    renderSetup(app);
+    return;
+  }
+
+  const kr = activeRecords();
+  const st = activeSettlement();
+  const y = state.viewYear, m = state.viewMonth;
+  const totalDays = daysInMonth(y, m);
+  const rawFirst = new Date(y, m, 1).getDay();
+  const firstWd = (rawFirst + 6) % 7;
+  const monthly = calcMonthlyBonus(kr, y, m);
+  let monthStamps = 0;
+  for (let d=1; d<=totalDays; d++) monthStamps += calcStamps(kr[fmt(y,m,d)]);
+  const monthYen = monthStamps * 50;
+  const weeklyCount = calcWeeklyCountForMonth(kr, y, m);
+  const unsettled = calcUnsettledYen(kr, st.lastSettledDate);
+  const bonusDays = calcWeeklyBonusDays(kr);
+  const pct = Math.min(100, Math.round(monthly.daysElapsed / monthly.totalDays * 100));
+  const lastS = st.history?.length ? st.history[st.history.length-1] : null;
+  const kidParam = getKidParam();
+
+  let html = `<div class="page">`;
+
+  // Error
+  if (state.error) html += `<div class="error-banner">${state.error}</div>`;
+
+  // Header
+  html += `<div class="header">
+    <div class="header-title"><span style="font-size:26px">🎫</span><h1>がんばり スタンプカード</h1></div>
+    ${state.saving ? '<span class="saving-tag">保存中…</span>' : ''}
+  </div>`;
+
+  // Kid tabs
+  if (state.kids.length > 1) {
+    html += `<div class="kid-tabs">`;
+    state.kids.forEach((k, i) => {
+      const c = kidColor(i);
+      const isActive = k.id === activeKid().id;
+      const dot = i===0 ? '🔴' : '🔵';
+      const bg = isActive ? c.main : c.soft;
+      const fg = isActive ? '#fff' : c.main;
+      const border = isActive ? c.main : c.main+'55';
+      html += `<button class="kid-tab" style="background:${bg};color:${fg};border:1px solid ${border}" onclick="switchKid('${k.id}')">${dot} ${k.name}</button>`;
+    });
+    html += `</div>`;
+  }
+
+  // Summary
+  html += `<div class="summary-row">
+    <div class="summary-card" style="border-top-color:#E85D3D"><div class="summary-icon">🔖</div><div class="summary-label">今月のスタンプ</div><div class="summary-value" style="color:#E85D3D">${monthStamps} 個</div></div>
+    <div class="summary-card" style="border-top-color:#2C5F7C"><div class="summary-icon">🪙</div><div class="summary-label">今月のポイント</div><div class="summary-value" style="color:#2C5F7C">¥${monthYen.toLocaleString()}</div></div>
+    <div class="summary-card" style="border-top-color:#D4A647"><div class="summary-icon">🔥</div><div class="summary-label">週間ボーナス</div><div class="summary-value" style="color:#D4A647">+¥${weeklyCount*50} (${weeklyCount}回)</div></div>
+  </div>`;
+
+  // Settlement
+  html += `<div class="settle-card">
+    <div class="settle-left">
+      <div class="label">未精算ポイント</div>
+      <div class="yen">¥${unsettled.toLocaleString()}</div>
+      ${lastS ? `<div class="last">前回精算: ${lastS.date}（¥${lastS.yen.toLocaleString()}）</div>` : ''}
+    </div>
+    <button class="settle-btn" ${unsettled===0?'disabled':''} onclick="openSettle()">精算する</button>
+  </div>`;
+
+  // Monthly bonus
+  html += `<div class="monthly-card">
+    <div class="monthly-header"><span class="monthly-title">${MONTH_NAMES[m]}の継続ボーナス</span><span class="monthly-badge">${monthly.isComplete?'確定':'進行中'}</span></div>
+    <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+    <div class="monthly-footer"><span>お休み: ${monthly.restDays}日</span><span class="monthly-yen">+¥${monthly.bonus}</span></div>
+  </div>`;
+
+  // Calendar
+  html += `<div class="cal-card">
+    <div class="month-nav">
+      <button class="nav-btn" onclick="prevMonth()">‹</button>
+      <div class="month-label">${y}年 ${MONTH_NAMES[m]}</div>
+      <button class="nav-btn" onclick="nextMonth()">›</button>
+    </div>
+    <div class="weekday-row">
+      ${WEEKDAYS_MON.map((w,i) => `<div class="weekday-cell${i===5?' sat':i===6?' sun':''}">${w}</div>`).join('')}
+    </div>
+    <div class="cal-grid">`;
+
+  for (let i=0; i<firstWd; i++) html += `<div></div>`;
+  for (let d=1; d<=totalDays; d++) {
+    const dk = fmt(y, m, d);
+    const isToday = dk === TODAY_KEY;
+    const isFuture = dk > TODAY_KEY;
+    const settled = st.lastSettledDate && dk <= st.lastSettledDate;
+    const hasStamps = calcStamps(kr[dk]) > 0;
+    const diff = Math.floor((new Date(TODAY_KEY) - new Date(dk)) / 86400000);
+    const needsPastUnlock = diff >= 3 && !hasStamps && !settled;
+    let cls = 'day-cell';
+    if (isToday) cls += ' today';
+    if (isFuture) cls += ' future';
+    if (settled) cls += ' settled';
+    if (needsPastUnlock && !isPastUnlocked()) cls += ' past-locked';
+    html += `<button class="${cls}" onclick="tapDay('${dk}')" ${isFuture?'disabled':''}>`;
+    if (settled) html += `<span class="lock-icon">🔒</span>`;
+    if (bonusDays.has(dk)) html += `<span class="fire-icon">🔥</span>`;
+    html += `<span class="day-num">${d}</span><div class="stamps-wrap">`;
+    state.kids.forEach((k, ki) => {
+      const kst = calcStamps((state.records[k.id]||{})[dk]);
+      if (!kst) return;
+      const kSettle = state.settlements[k.id]?.lastSettledDate;
+      const isKSettled = kSettle && dk <= kSettle;
+      const isOther = k.id !== activeKid().id;
+      const c = kidColor(ki);
+      const bg = isKSettled ? c.main+'22' : isOther ? c.main+'55' : c.main;
+      const fg = (isKSettled||isOther) ? c.main : '#fff';
+      html += `<span class="stamp-badge" style="background:${bg};color:${fg}" title="${k.name}">${kst}</span>`;
+    });
+    html += `</div></button>`;
+  }
+
+  html += `</div>
+    <div class="cal-legend">
+      ${state.kids.map((k,i)=>`<span class="legend-kid" style="color:${kidColor(i).main}">● ${k.name}</span>`).join('')}
+      　/　うすい色は精算済み、濃い色は未精算
+    </div>
+  </div>`;
+
+  // Rules
+  html += `<div class="legend-card">
+    <div class="legend-title">スタンプのルール</div>
+    <ul class="legend-list">
+      <li>ドリル4ページ＋ドラム＋宿題 → 🔖×1</li>
+      <li>コモンで自習：1.5時間ごとに🔖×1（最大9h、＋ドラムで+🔖1）</li>
+      <li>塾で自習：1時間ごとに🔖×1（最大8h、＋ドラムで+🔖1）</li>
+      <li>「ドリル・ドラム・宿題」と「塾」は同じ日に両方OK</li>
+      <li>ドラムは1日1回。3つのうちどれか1つだけ</li>
+      <li>🔖1個 ＝ 50円 / 7日連続で+50円</li>
+      <li>1ヶ月お休み0〜2日 → 月末後に300〜100円ボーナス</li>
+    </ul>
+  </div>`;
+
+  html += `<button class="reset-link" onclick="openReset()">すべての記録をリセットする</button>
+  <button class="export-btn" onclick="openExport()">📦 データのエクスポート / インポート</button>
+  </div>`;
+
+  // Modals
+  if (state.selectedDate) html += renderDayModal();
+  if (state.showSettleConfirm) html += renderSettleModal(unsettled);
+  if (state.showResetConfirm) html += renderResetModal();
+  if (state.showExportImport) html += renderExportModal();
+  if (state.pendingPastDate) html += renderPastUnlockModal();
+
+  app.innerHTML = html;
+}
+
+function renderSetup(app) {
+  app.innerHTML = `<div class="page"><div class="setup-card">
+    <div style="display:flex;align-items:center;gap:8px"><span style="font-size:26px">🎫</span><h1 style="font-size:20px;font-weight:800">がんばり スタンプカード</h1></div>
+    <p style="font-size:13px;color:#8a8378">お子さんの名前を入力してください（2人まで）</p>
+    <input class="setup-input" id="name0" placeholder="例：みの">
+    <input class="setup-input" id="name1" placeholder="例：むつ（空欄でも可）">
+    <button class="save-btn" onclick="finishSetup()">はじめる</button>
+  </div></div>`;
+}
+
+function renderDayModal() {
+  const dk = state.selectedDate;
+  const kr = activeRecords();
+  const a = kr[dk] ? {...kr[dk]} : emptyActivity();
+  const stamps = calcStamps(a);
+  const st = activeSettlement();
+  const isLocked = st.lastSettledDate && dk <= st.lastSettledDate;
+  const color = activeColor();
+  const kid = activeKid();
+  const dateObj2 = new Date(dk);
+  const [y2,m2,d2] = dk.split('-').map(Number);
+  const label = `${y2}年${m2}月${d2}日（${WEEKDAYS_ALL[dateObj2.getDay()]}）`;
+
+  const togRow = (key, title, desc, checked, compact=false, onChange='') => {
+    const c = checked ? 'checked' : '';
+    const act = checked ? 'active' : '';
+    const cp = compact ? 'compact' : '';
+    const fn = onChange || `toggleActivity('${key}')`;
+    return `<button class="toggle-btn ${act} ${cp}" onclick="${fn}">
+      <span class="checkbox ${c}">${checked?'✓':''}</span>
+      <span><span class="toggle-title">${title}</span><span class="toggle-desc">${desc}</span></span>
+    </button>`;
+  };
+
+  const hourPicker = (key, hours, vals, activeVal) => vals.map(h =>
+    `<button class="hour-btn${activeVal===h?' active':''}" onclick="setHour('${key}','${h}')">${h}h</button>`
+  ).join('');
+
+  let body = ``;
+  // locked banner
+  if (isLocked) body += `<div class="locked-banner">🔒 この日は精算済みのため編集できません</div>`;
+  // stamp preview
+  body += `<div class="stamp-preview">
+    <span class="preview-emoji">${stamps>0?'🔖'.repeat(Math.min(stamps,5)):'—'}</span>
+    <span class="preview-text" style="color:${color.main}">${stamps>0?`${stamps} 個（¥${stamps*50}）`:'まだスタンプなし'}</span>
+  </div>`;
+
+  const locked = isLocked ? 'locked' : '';
+  body += `<div class="activity-section ${locked}">`;
+  body += togRow('drillDramaHomework', 'ドリル・ドラム・宿題', 'ドリル4ページ＋ドラム＋宿題 → 🔖1', a.drillDramaHomework, false, 'toggleDrill()');
+  // Common
+  body += `<div class="sub-block">`;
+  body += togRow('commonStudy', 'コモンで自習', '時間を選んでください', a.commonStudy, false, 'toggleCommon()');
+  if (a.commonStudy) {
+    body += `<div class="hour-picker">${hourPicker('commonHours', 'common', [1.5,3,4.5,6,7.5,9], a.commonHours)}</div>`;
+    const bs = Math.round((a.commonHours||1.5)/1.5)+1;
+    body += togRow('commonDrama', '＋ドラムもやった', `🔖${bs} になる`, a.commonDrama, true, 'toggleCommonDrama()');
+  }
+  body += `</div>`;
+  // Juku
+  body += `<div class="sub-block">`;
+  body += togRow('jukuStudy', '塾で自習', '時間を選んでください', a.jukuStudy, false, 'toggleJuku()');
+  if (a.jukuStudy) {
+    body += `<div class="hour-picker">${hourPicker('jukuHours','juku',[1,2,3,4,5,6,7,8], a.jukuHours)}</div>`;
+    const js = (a.jukuHours||1)+1;
+    body += togRow('jukuDrama', '＋ドラムもやった', `🔖${js} になる`, a.jukuDrama, true, 'toggleJukuDrama()');
+  }
+  body += `</div></div>`;
+
+  // Save btn
+  if (!isLocked) body += `<button class="save-btn" onclick="saveDay()">この内容で保存する</button>`;
+
+  // Delete
+  if (!state.showDeleteConfirm) {
+    body += `<button class="delete-link" onclick="openDeleteConfirm()">この日の記録を消す</button>`;
+  } else {
+    body += `<div class="delete-box">
+      <div class="delete-box-title">この日の記録を削除します</div>
+      <div class="pw-label">おうちの人のパスワード</div>
+      <input class="pw-input${state.deleteWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.deletePw}" oninput="state.deletePw=this.value" placeholder="••••">
+      <div class="btn-row">
+        <button class="cancel-btn" onclick="closeDeleteConfirm()">やめる</button>
+        <button class="del-ok-btn" onclick="execDelete()">削除する</button>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="overlay" onclick="closeDay()">
+    <div class="modal-card" style="background:${color.page}" onclick="event.stopPropagation()">
+      <div class="modal-scroll">
+        <div class="modal-header">
+          <div><div class="modal-kid-name" style="color:${color.main}">${kid.name}</div><div class="modal-date">${label}</div></div>
+          <button class="close-btn" onclick="closeDay()">✕</button>
+        </div>
+        ${body}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSettleModal(yen) {
+  const kid = activeKid();
+  return `<div class="overlay center" onclick="closeSettle()">
+    <div class="confirm-card" onclick="event.stopPropagation()">
+      <div class="confirm-title">${kid.name}さんの精算</div>
+      <div class="confirm-body">未精算の ¥${yen.toLocaleString()} をすべて精算済みにします。よろしいですか？</div>
+      <div class="pw-label">おうちの人のパスワード</div>
+      <input class="pw-input${state.settleWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.settlePw}" oninput="state.settlePw=this.value" placeholder="••••">
+      <div class="btn-row">
+        <button class="cancel-btn" onclick="closeSettle()">キャンセル</button>
+        <button class="ok-btn" ${state.settlePw===SETTLE_PW?'':'disabled'} onclick="execSettle()">精算する</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderResetModal() {
+  return `<div class="overlay center" onclick="closeReset()">
+    <div class="confirm-card" onclick="event.stopPropagation()">
+      <div class="confirm-title">すべての記録をリセット</div>
+      <div class="confirm-body">全員分の毎日の記録と精算履歴をすべて消します。名前はそのまま残ります。この操作は元に戻せません。</div>
+      <div class="pw-label">おうちの人のパスワード</div>
+      <input class="pw-input${state.resetWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.resetPw}" oninput="state.resetPw=this.value" placeholder="••••">
+      <div class="btn-row">
+        <button class="cancel-btn" onclick="closeReset()">キャンセル</button>
+        <button class="ok-btn" ${state.resetPw===SETTLE_PW?'':'disabled'} onclick="execReset()">リセットする</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderPastUnlockModal() {
+  return `<div class="overlay center" onclick="closePastUnlock()">
+    <div class="confirm-card" onclick="event.stopPropagation()">
+      <div class="confirm-title">📅 過去の日付への入力</div>
+      <div class="confirm-body">4日以上前の日付への新規入力はおうちの人のパスワードが必要です。入力後は今日いっぱい過去の日付に入力できます。</div>
+      <div class="pw-label">おうちの人のパスワード</div>
+      <input class="pw-input${state.pastUnlockWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.pastUnlockPw}" oninput="state.pastUnlockPw=this.value" placeholder="••••">
+      <div class="btn-row">
+        <button class="cancel-btn" onclick="closePastUnlock()">キャンセル</button>
+        <button class="ok-btn" ${state.pastUnlockPw===SETTLE_PW?'':'disabled'} onclick="execPastUnlock()">解除する</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderExportModal() {
+  const data = JSON.stringify({ kids:state.kids, records:state.records, settlements:state.settlements }, null, 2);
+  return `<div class="overlay center" onclick="closeExport()">
+    <div class="confirm-card" style="max-height:80vh;overflow-y:auto" onclick="event.stopPropagation()">
+      <div class="confirm-title">📦 データのエクスポート / インポート</div>
+      <div class="export-tab-row">
+        <button class="export-tab${state.exportMode==='export'?' active':''}" onclick="state.exportMode='export';render()">コピーして保存</button>
+        <button class="export-tab${state.exportMode==='import'?' active':''}" onclick="state.exportMode='import';render()">貼り付けて復元</button>
+      </div>
+      ${state.exportMode==='export' ? `
+        <div class="export-desc">下のテキストを全部コピーして保存しておいてください。</div>
+        <textarea class="export-textarea" readonly onclick="this.select()">${data}</textarea>
+        <button class="copy-btn" onclick="copyExport()">${state.copied?'✓ コピーしました！':'テキストをコピーする'}</button>
+      ` : `
+        <div class="export-desc">保存しておいたテキストを貼り付けて「復元する」を押してください。</div>
+        ${state.importError?`<div class="import-error">${state.importError}</div>`:''}
+        <textarea class="export-textarea" placeholder="ここにテキストを貼り付けてください..." oninput="state.importText=this.value;state.importError=''">${state.importText}</textarea>
+        <button class="save-btn" style="margin-top:8px" onclick="execImport()">復元する</button>
+      `}
+      <button class="close-link" onclick="closeExport()">閉じる</button>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// Actions
+// ============================================================
+function switchKid(id) { state.activeKidId = id; render(); }
+function prevMonth() {
+  if (state.viewMonth===0) { state.viewYear--; state.viewMonth=11; }
+  else state.viewMonth--;
+  render();
+}
+function nextMonth() {
+  if (state.viewMonth===11) { state.viewYear++; state.viewMonth=0; }
+  else state.viewMonth++;
+  render();
+}
+
+function tapDay(dk) {
+  const kr = activeRecords();
+  const st = activeSettlement();
+  const settled = st.lastSettledDate && dk <= st.lastSettledDate;
+  const hasStamps = calcStamps(kr[dk]) > 0;
+  const diff = Math.floor((new Date(TODAY_KEY) - new Date(dk)) / 86400000);
+  const needsPastUnlock = diff >= 3 && !hasStamps && !settled;
+  if (needsPastUnlock && !isPastUnlocked()) {
+    state.pendingPastDate = dk;
+    state.pastUnlockPw = '';
+    render();
+    return;
+  }
+  state.selectedDate = dk;
+  state.showDeleteConfirm = false;
+  state.deletePw = '';
+  render();
+}
+
+function closeDay() { state.selectedDate = null; render(); }
+function openDeleteConfirm() { state.showDeleteConfirm = true; render(); }
+function closeDeleteConfirm() { state.showDeleteConfirm = false; state.deletePw = ''; render(); }
+
+function currentActivity() {
+  const dk = state.selectedDate;
+  const kr = activeRecords();
+  return kr[dk] ? {...kr[dk]} : emptyActivity();
+}
+
+// Drum exclusivity helper
+function setDrum(which) {
+  // which: 'drill' | 'common' | 'juku' | null
+  const a = currentActivity();
+  a.drillDramaHomework = which === 'drill' ? !a.drillDramaHomework : (which ? false : a.drillDramaHomework);
+  a.commonDrama = which === 'common' ? !a.commonDrama : (which ? false : a.commonDrama);
+  a.jukuDrama = which === 'juku' ? !a.jukuDrama : (which ? false : a.jukuDrama);
+  return a;
+}
+
+function toggleDrill() {
+  const dk = state.selectedDate;
+  const a = currentActivity();
+  const newVal = !a.drillDramaHomework;
+  a.drillDramaHomework = newVal;
+  if (newVal) { a.commonDrama = false; a.jukuDrama = false; }
+  updateTempActivity(dk, a);
+}
+function toggleCommon() {
+  const dk = state.selectedDate;
+  const a = currentActivity();
+  a.commonStudy = !a.commonStudy;
+  if (a.commonStudy && !a.commonHours) a.commonHours = 1.5;
+  updateTempActivity(dk, a);
+}
+function toggleCommonDrama() {
+  const dk = state.selectedDate;
+  const a = currentActivity();
+  const newVal = !a.commonDrama;
+  a.commonDrama = newVal;
+  if (newVal) { a.drillDramaHomework = false; a.jukuDrama = false; }
+  updateTempActivity(dk, a);
+}
+function toggleJuku() {
+  const dk = state.selectedDate;
+  const a = currentActivity();
+  a.jukuStudy = !a.jukuStudy;
+  if (a.jukuStudy && !a.jukuHours) a.jukuHours = 1;
+  updateTempActivity(dk, a);
+}
+function toggleJukuDrama() {
+  const dk = state.selectedDate;
+  const a = currentActivity();
+  const newVal = !a.jukuDrama;
+  a.jukuDrama = newVal;
+  if (newVal) { a.drillDramaHomework = false; a.commonDrama = false; }
+  updateTempActivity(dk, a);
+}
+
+// Temporary activity held in a separate map during editing
+const tempActivities = {};
+function updateTempActivity(dk, a) {
+  tempActivities[dk] = a;
+  // Update records temporarily for live preview
+  const kid = activeKid();
+  if (!state.records[kid.id]) state.records[kid.id] = {};
+  state.records[kid.id][dk] = a;
+  render();
+}
+
+function setHour(key, val) {
+  const dk = state.selectedDate;
+  const a = currentActivity();
+  a[key] = parseFloat(val);
+  updateTempActivity(dk, a);
+}
+
+function toggleActivity(key) {
+  const dk = state.selectedDate;
+  const a = currentActivity();
+  a[key] = !a[key];
+  updateTempActivity(dk, a);
+}
+
+function saveDay() {
+  const dk = state.selectedDate;
+  const a = currentActivity();
+  const kid = activeKid();
+  if (!state.records[kid.id]) state.records[kid.id] = {};
+  state.records[kid.id][dk] = a;
+  delete tempActivities[dk];
+  state.selectedDate = null;
+  scheduleSave();
+  render();
+}
+
+function execDelete() {
+  if (state.deletePw !== SETTLE_PW) {
+    state.deleteWrongShake = true;
+    render();
+    setTimeout(() => { state.deleteWrongShake = false; render(); }, 500);
+    return;
+  }
+  const dk = state.selectedDate;
+  const kid = activeKid();
+  if (state.records[kid.id]) delete state.records[kid.id][dk];
+  delete tempActivities[dk];
+  state.selectedDate = null;
+  state.showDeleteConfirm = false;
+  state.deletePw = '';
+  scheduleSave();
+  render();
+}
+
+function openSettle() { state.showSettleConfirm = true; state.settlePw = ''; render(); }
+function closeSettle() { state.showSettleConfirm = false; state.settlePw = ''; render(); }
+function execSettle() {
+  if (state.settlePw !== SETTLE_PW) return;
+  const kid = activeKid();
+  const kr = activeRecords();
+  const st = activeSettlement();
+  const yen = calcUnsettledYen(kr, st.lastSettledDate);
+  const newHistory = [...(st.history||[]), { date: TODAY_KEY, yen }];
+  if (!state.settlements[kid.id]) state.settlements[kid.id] = {};
+  state.settlements[kid.id] = { lastSettledDate: TODAY_KEY, history: newHistory };
+  state.showSettleConfirm = false;
+  state.settlePw = '';
+  scheduleSave();
+  render();
+}
+
+function openReset() { state.showResetConfirm = true; state.resetPw = ''; render(); }
+function closeReset() { state.showResetConfirm = false; state.resetPw = ''; render(); }
+function execReset() {
+  if (state.resetPw !== SETTLE_PW) {
+    state.resetWrongShake = true;
+    render();
+    setTimeout(() => { state.resetWrongShake = false; render(); }, 500);
+    return;
+  }
+  state.kids.forEach(k => {
+    state.records[k.id] = {};
+    state.settlements[k.id] = { lastSettledDate: null, history: [] };
+  });
+  state.showResetConfirm = false;
+  state.resetPw = '';
+  scheduleSave();
+  render();
+}
+
+function openExport() { state.showExportImport = true; state.exportMode = 'export'; state.importText = ''; state.importError = ''; state.copied = false; render(); }
+function closeExport() { state.showExportImport = false; render(); }
+function copyExport() {
+  const data = JSON.stringify({ kids:state.kids, records:state.records, settlements:state.settlements }, null, 2);
+  navigator.clipboard.writeText(data).then(() => { state.copied = true; render(); setTimeout(() => { state.copied = false; render(); }, 2000); });
+}
+function execImport() {
+  const raw = state.importText.trim();
+  const f = raw.indexOf('{'), l = raw.lastIndexOf('}');
+  if (f===-1||l===-1||l<f) { state.importError = 'データが見つかりませんでした。'; render(); return; }
+  try {
+    const p = JSON.parse(raw.slice(f, l+1));
+    if (!p.kids || !Array.isArray(p.kids)) { state.importError = 'データの形式が正しくありません。'; render(); return; }
+    state.kids = p.kids;
+    state.records = p.records || {};
+    state.settlements = p.settlements || {};
+    if (p.kids.length) state.activeKidId = p.kids[0].id;
+    state.showExportImport = false;
+    scheduleSave();
+    render();
+  } catch(e) {
+    state.importError = '読み込みに失敗しました。テキストを確認してください。';
+    render();
+  }
+}
+
+function closePastUnlock() { state.pendingPastDate = null; state.pastUnlockPw = ''; render(); }
+function execPastUnlock() {
+  if (state.pastUnlockPw !== SETTLE_PW) {
+    state.pastUnlockWrongShake = true;
+    render();
+    setTimeout(() => { state.pastUnlockWrongShake = false; render(); }, 500);
+    return;
+  }
+  const dk = state.pendingPastDate;
+  state.pastUnlockDate = TODAY_KEY;
+  state.pendingPastDate = null;
+  state.pastUnlockPw = '';
+  state.selectedDate = dk;
+  state.showDeleteConfirm = false;
+  state.deletePw = '';
+  render();
+}
+
+function finishSetup() {
+  const n0 = document.getElementById('name0')?.value.trim();
+  const n1 = document.getElementById('name1')?.value.trim();
+  const names = [n0, n1].filter(Boolean);
+  if (!names.length) return;
+  const ts = Date.now();
+  state.kids = names.map((name, i) => ({ id: `kid_${ts}_${i}`, name }));
+  state.records = {};
+  state.settlements = {};
+  state.kids.forEach(k => {
+    state.records[k.id] = {};
+    state.settlements[k.id] = { lastSettledDate: null, history: [] };
+  });
+  // Auto-select by URL param
+  const param = getKidParam();
+  const matched = param ? state.kids.find(k => k.name === param) : null;
+  state.activeKidId = matched ? matched.id : state.kids[0].id;
+  scheduleSave();
+  render();
+}
+
+// ============================================================
+// Init
+// ============================================================
+(async () => {
+  await loadFromFirebase();
+  state.loading = false;
+  if (state.kids.length) {
+    const param = getKidParam();
+    const matched = param ? state.kids.find(k => k.name === param) : null;
+    state.activeKidId = matched ? matched.id : state.kids[0].id;
+  }
+  render();
+})();
+</script>
+</body>
+</html>
