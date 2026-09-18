@@ -968,7 +968,12 @@ function execSettle() {
   const yen = calcUnsettledYen(kr, st.lastSettledDate);
   const newHistory = [...(st.history||[]), { date: TODAY_KEY, yen }];
   if (!state.settlements[kid.id]) state.settlements[kid.id] = {};
-  state.settlements[kid.id] = { lastSettledDate: TODAY_KEY, history: newHistory };
+  // Lock up to yesterday — today stays editable even after settlement,
+  // because the kid might still earn stamps today.
+  const yesterday = new Date(TODAY_KEY);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = fmt(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+  state.settlements[kid.id] = { lastSettledDate: yesterdayKey, history: newHistory };
   state.showSettleConfirm = false;
   state.settlePw = '';
   scheduleSave();
