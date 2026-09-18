@@ -613,7 +613,7 @@ function render() {
 function renderSetup(app) {
   app.innerHTML = `<div class="page"><div class="setup-card">
     <div style="display:flex;align-items:center;gap:8px"><span style="font-size:26px">🎫</span><h1 style="font-size:20px;font-weight:800">がんばり スタンプカード</h1></div>
-    <p style="font-size:13px;color:#8a8378">お子さんの名前を入力してください（2人まで）</p>
+    <p style="font-size:13px;color:#8a8378">お子さんの名前を入力してください（2人まで）。既に使ったことがある場合は同じ名前を入力すると以前のデータが読み込まれます。</p>
     <input class="setup-input" id="name0" placeholder="例：みの">
     <input class="setup-input" id="name1" placeholder="例：むつ（空欄でも可）">
     <button class="save-btn" onclick="finishSetup()">はじめる</button>
@@ -1008,11 +1008,40 @@ function execPastUnlock() {
   render();
 }
 
-function finishSetup() {
+async function finishSetup() {
   const n0 = document.getElementById('name0')?.value.trim();
   const n1 = document.getElementById('name1')?.value.trim();
   const names = [n0, n1].filter(Boolean);
   if (!names.length) return;
+
+  // Show loading state
+  document.querySelector('.save-btn').textContent = '確認中…';
+  document.querySelector('.save-btn').disabled = true;
+
+  // Build the path key from entered names and check if data already exists
+  const key = names.join('');
+  DB_PATH = `${FIREBASE_BASE}-${key}`;
+  localStorage.setItem('study-tracker-path-key', key);
+
+  try {
+    const existing = await dbGet('');
+    if (existing && existing.kids && Array.isArray(existing.kids) && existing.kids.length > 0) {
+      // Existing data found — load it instead of creating new
+      state.kids = existing.kids;
+      state.records = existing.records || {};
+      state.settlements = existing.settlements || {};
+      const param = getKidParam();
+      const matched = param ? state.kids.find(k => k.name === param) : null;
+      state.activeKidId = matched ? matched.id : state.kids[0].id;
+      state.loading = false;
+      render();
+      return;
+    }
+  } catch(e) {
+    // No existing data — proceed with new setup
+  }
+
+  // No existing data — create new
   const ts = Date.now();
   state.kids = names.map((name, i) => ({ id: `kid_${ts}_${i}`, name }));
   state.records = {};
@@ -1021,7 +1050,6 @@ function finishSetup() {
     state.records[k.id] = {};
     state.settlements[k.id] = { lastSettledDate: null, history: [] };
   });
-  // Auto-select by URL param
   const param = getKidParam();
   const matched = param ? state.kids.find(k => k.name === param) : null;
   state.activeKidId = matched ? matched.id : state.kids[0].id;
