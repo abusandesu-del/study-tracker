@@ -719,7 +719,7 @@ function renderDayModal() {
     body += `<div class="delete-box">
       <div class="delete-box-title">この日の記録を削除します</div>
       <div class="pw-label">おうちの人のパスワード</div>
-      <input class="pw-input${state.deleteWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.deletePw}" oninput="state.deletePw=this.value" placeholder="••••">
+      <input class="pw-input${state.deleteWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.deletePw}" oninput="state.deletePw=this.value;render()" placeholder="••••">
       <div class="btn-row">
         <button class="cancel-btn" onclick="closeDeleteConfirm()">やめる</button>
         <button class="del-ok-btn" onclick="execDelete()">削除する</button>
@@ -747,7 +747,7 @@ function renderSettleModal(yen) {
       <div class="confirm-title">${kid.name}さんの精算</div>
       <div class="confirm-body">未精算の ¥${yen.toLocaleString()} をすべて精算済みにします。よろしいですか？</div>
       <div class="pw-label">おうちの人のパスワード</div>
-      <input class="pw-input${state.settleWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.settlePw}" oninput="state.settlePw=this.value" placeholder="••••">
+      <input class="pw-input${state.settleWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.settlePw}" oninput="state.settlePw=this.value;render()" placeholder="••••">
       <div class="btn-row">
         <button class="cancel-btn" onclick="closeSettle()">キャンセル</button>
         <button class="ok-btn" ${state.settlePw===SETTLE_PW?'':'disabled'} onclick="execSettle()">精算する</button>
@@ -762,7 +762,7 @@ function renderResetModal() {
       <div class="confirm-title">すべての記録をリセット</div>
       <div class="confirm-body">全員分の毎日の記録と精算履歴をすべて消します。名前はそのまま残ります。この操作は元に戻せません。</div>
       <div class="pw-label">おうちの人のパスワード</div>
-      <input class="pw-input${state.resetWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.resetPw}" oninput="state.resetPw=this.value" placeholder="••••">
+      <input class="pw-input${state.resetWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.resetPw}" oninput="state.resetPw=this.value;render()" placeholder="••••">
       <div class="btn-row">
         <button class="cancel-btn" onclick="closeReset()">キャンセル</button>
         <button class="ok-btn" ${state.resetPw===SETTLE_PW?'':'disabled'} onclick="execReset()">リセットする</button>
@@ -777,7 +777,7 @@ function renderPastUnlockModal() {
       <div class="confirm-title">📅 過去の日付への入力</div>
       <div class="confirm-body">4日以上前の日付への新規入力はおうちの人のパスワードが必要です。入力後は今日いっぱい過去の日付に入力できます。</div>
       <div class="pw-label">おうちの人のパスワード</div>
-      <input class="pw-input${state.pastUnlockWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.pastUnlockPw}" oninput="state.pastUnlockPw=this.value" placeholder="••••">
+      <input class="pw-input${state.pastUnlockWrongShake?' wrong':''}" type="password" inputmode="numeric" maxlength="4" value="${state.pastUnlockPw}" oninput="state.pastUnlockPw=this.value;render()" placeholder="••••">
       <div class="btn-row">
         <button class="cancel-btn" onclick="closePastUnlock()">キャンセル</button>
         <button class="ok-btn" ${state.pastUnlockPw===SETTLE_PW?'':'disabled'} onclick="execPastUnlock()">解除する</button>
@@ -968,12 +968,18 @@ function execSettle() {
   const yen = calcUnsettledYen(kr, st.lastSettledDate);
   const newHistory = [...(st.history||[]), { date: TODAY_KEY, yen }];
   if (!state.settlements[kid.id]) state.settlements[kid.id] = {};
-  // Lock up to yesterday — today stays editable even after settlement,
-  // because the kid might still earn stamps today.
-  const yesterday = new Date(TODAY_KEY);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayKey = fmt(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
-  state.settlements[kid.id] = { lastSettledDate: yesterdayKey, history: newHistory };
+  // If today already has stamps, include today in the settlement.
+  // Otherwise lock up to yesterday so today stays editable.
+  const todayStamps = calcStamps((state.records[kid.id] || {})[TODAY_KEY]);
+  let settleUpTo;
+  if (todayStamps > 0) {
+    settleUpTo = TODAY_KEY;
+  } else {
+    const yesterday = new Date(TODAY_KEY);
+    yesterday.setDate(yesterday.getDate() - 1);
+    settleUpTo = fmt(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+  }
+  state.settlements[kid.id] = { lastSettledDate: settleUpTo, history: newHistory };
   state.showSettleConfirm = false;
   state.settlePw = '';
   scheduleSave();
